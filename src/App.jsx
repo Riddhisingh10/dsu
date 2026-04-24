@@ -8,6 +8,7 @@ import PowerInputModal from './components/PowerInputModal';
 import { useVisionProfile } from './hooks/useVisionProfile';
 import { LogOut, Monitor, Settings, Maximize2, Shield } from 'lucide-react';
 import VisionSensor from './components/VisionSensor';
+import Preloader from './components/Preloader';
 
 function App() {
   const [session, setSession] = useState({ user: { id: 'local-user', email: 'guest@eyep.io' } });
@@ -83,21 +84,9 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleSave, isCalibrated]);
 
-  // Show loader while hook initializes
+  // Show the high-fidelity preloader
   if (loading || !config) {
-    return (
-      <div className="h-screen w-screen bg-[#0A0F1A] flex flex-col items-center justify-center font-mono">
-        <div className="relative">
-          <div className="w-24 h-24 border-2 border-cyan-500/20 rounded-full animate-ping" />
-          <div className="absolute inset-0 flex items-center justify-center">
-             <div className="w-12 h-12 border-2 border-cyan-400 border-t-transparent animate-spin rounded-full" />
-          </div>
-        </div>
-        <div className="mt-8 text-cyan-400 text-[10px] uppercase tracking-[0.5em] animate-pulse">
-           Initializing_Neural_Link...
-        </div>
-      </div>
-    );
+    return <Preloader onComplete={() => {}} />;
   }
 
   // Show the onboarding modal if the user hasn't entered their prescription yet
@@ -111,37 +100,42 @@ function App() {
   const aggregatedAxis = (config.left_axis + config.right_axis) / 2;
 
   return (
-    <div className="flex flex-col h-screen bg-[#0A0F1A] text-slate-300 font-mono selection:bg-cyan-500/30 overflow-hidden relative">
+    <div className="flex flex-col h-screen bg-[#060A14] text-slate-300 font-mono selection:bg-cyan-500/30 overflow-hidden relative">
       {/* Tactical Background Grid */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(rgba(0,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.2) 1px, transparent 1px)',
+        <div className="absolute inset-0 opacity-[0.04]" style={{
+          backgroundImage: 'linear-gradient(rgba(34,211,238,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.15) 1px, transparent 1px)',
           backgroundSize: '100px 100px'
         }} />
-        <div className="absolute inset-0 opacity-[0.01]" style={{
-          backgroundImage: 'linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px)',
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: 'linear-gradient(rgba(245,158,11,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.1) 1px, transparent 1px)',
           backgroundSize: '20px 20px'
         }} />
       </div>
 
       {/* Top Navigation Bar */}
-      <header className="h-14 border-b border-slate-800 bg-[#0D1424] flex items-center justify-between px-6 z-50 shrink-0">
+      <header className="h-14 border-b border-amber-500/10 bg-[#0D1424]/80 backdrop-blur-md flex items-center justify-between px-6 z-50 shrink-0">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-             <img src="/logo.png" alt="EYEP" className="w-7 h-7 object-contain brightness-125" onError={(e) => e.target.style.display = 'none'} />
+             <div className="relative">
+               <img src="/logo.png" alt="EYEP" className="w-8 h-8 object-contain brightness-110 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
+               <div className="absolute -inset-1 border border-amber-500/20 rounded-full animate-pulse" />
+             </div>
              <div className="h-4 w-px bg-slate-800 mx-2" />
-             <h1 className="text-sm font-black tracking-[0.3em] text-white uppercase italic">System Overview</h1>
+             <h1 className="text-sm font-black tracking-[0.3em] text-white uppercase italic">
+               EYEP <span className="text-amber-500/80">Software-Defined Sight</span>
+             </h1>
           </div>
         </div>
 
         <div className="flex items-center gap-6 text-[10px] font-bold">
            {/* Live power readout in header */}
-           <div className="flex items-center gap-3 text-cyan-400/70 tracking-widest">
-              <span>SPH: {aggregatedSphere.toFixed(2)}</span>
+           <div className="flex items-center gap-3 text-cyan-400/70 tracking-widest bg-black/40 px-3 py-1 border border-slate-800 rounded-sm">
+              <span className="text-amber-500/50">SPH:</span> {aggregatedSphere.toFixed(2)}
               <span className="text-slate-700">|</span>
-              <span>CYL: {aggregatedCyl.toFixed(2)}</span>
+              <span className="text-amber-500/50">CYL:</span> {aggregatedCyl.toFixed(2)}
               <span className="text-slate-700">|</span>
-              <span>AXIS: {aggregatedAxis.toFixed(0)}°</span>
+              <span className="text-amber-500/50">AXIS:</span> {aggregatedAxis.toFixed(0)}°
            </div>
            <div className="flex items-center gap-2 text-slate-400 tracking-[0.2em]">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
