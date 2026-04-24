@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  background-color: #050505;
+  color: #ffffff;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+canvas {
+  touch-action: none;
+}
+
+.glass {
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 65, 0.1);
+}
+
+.cyber-button {
+  @apply relative overflow-hidden px-6 py-2 bg-cyber-green text-cyber-black font-bold uppercase tracking-wider transition-all duration-300;
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+}
+
+.cyber-button:hover {
+  @apply bg-cyber-accent scale-105;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.cyber-input {
+  @apply bg-cyber-dark border border-cyber-green-dim p-2 text-cyber-green focus:border-cyber-green outline-none transition-all;
+}
