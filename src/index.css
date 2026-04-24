@@ -37,3 +37,13 @@ canvas {
 .cyber-input {
   @apply bg-cyber-dark border border-cyber-green-dim p-2 text-cyber-green focus:border-cyber-green outline-none transition-all;
 }
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}

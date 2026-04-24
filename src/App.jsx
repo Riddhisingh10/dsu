@@ -1,116 +1,258 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { supabase } from './lib/supabase';
 import Auth from './components/Auth';
 import VisionEngine from './components/VisionEngine';
 import CalibrationSidebar from './components/CalibrationSidebar';
+import PowerInputModal from './components/PowerInputModal';
 import { useVisionProfile } from './hooks/useVisionProfile';
-import { LogOut, Monitor, Settings, Maximize2 } from 'lucide-react';
+import { LogOut, Monitor, Settings, Maximize2, Shield } from 'lucide-react';
+import VisionSensor from './components/VisionSensor';
 
 function App() {
   const [session, setSession] = useState({ user: { id: 'local-user', email: 'guest@eyep.io' } });
   const [isSplit, setIsSplit] = useState(true);
+  const [activeImage, setActiveImage] = useState(1);
+  const [isAutoDistance, setIsAutoDistance] = useState(false);
+  const [time, setTime] = useState(new Date());
+  const [isCalibrated, setIsCalibrated] = useState(false);
+  const [initialPower, setInitialPower] = useState({ sphere: 0, cyl: 0, axis: 0 });
 
-  useEffect(() => {
-    if (!supabase) return;
-
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      if (existingSession) setSession(existingSession);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
+  // Hook MUST be called before any useEffect that references its return values
   const { config, setConfig, loading, saveProfile } = useVisionProfile(session?.user);
 
-  const handleSave = async () => {
+  const demoImages = [
+    '/demo/text_sample.png',
+    '/demo/1.png',
+    '/demo/2.png',
+    '/demo/3.png',
+    '/demo/4.png'
+  ];
+
+  const handleSave = useCallback(async () => {
+    if (!config) return;
     const success = await saveProfile(config);
-    if (success) {
-      console.log('EYEP: Profile saved locally.');
-    }
-  };
+    if (success) console.log('EYEP: Profile saved.');
+  }, [config, saveProfile]);
+
+  // When the user submits their prescription from the onboarding modal
+  const handlePrescriptionSubmit = useCallback((prescription) => {
+    const power = {
+      sphere: ((prescription.left_eye + prescription.left_ap) + (prescription.right_eye + prescription.right_ap)) / 2,
+      cyl: (prescription.left_cyl + prescription.right_cyl) / 2,
+      axis: (prescription.left_axis + prescription.right_axis) / 2
+    };
+    
+    setInitialPower(power);
+    setConfig(prev => ({
+      ...prev,
+      ...prescription,
+    }));
+    setIsCalibrated(true);
+  }, [setConfig]);
+
+  // Clock timer
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (!isCalibrated) return; // Don't allow shortcuts before calibration
+
+      if (e.key >= '1' && e.key <= '5') {
+        setActiveImage(parseInt(e.key));
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setIsSplit(prev => !prev);
+      }
+      if (e.key.toLowerCase() === 'a') {
+        setIsAutoDistance(prev => !prev);
+      }
+      if (e.key.toLowerCase() === 's' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [handleSave, isCalibrated]);
+
+  // Show loader while hook initializes
+  if (loading || !config) {
+    return (
+      <div className="h-screen w-screen bg-[#0A0F1A] flex flex-col items-center justify-center font-mono">
+        <div className="relative">
+          <div className="w-24 h-24 border-2 border-cyan-500/20 rounded-full animate-ping" />
+          <div className="absolute inset-0 flex items-center justify-center">
+             <div className="w-12 h-12 border-2 border-cyan-400 border-t-transparent animate-spin rounded-full" />
+          </div>
+        </div>
+        <div className="mt-8 text-cyan-400 text-[10px] uppercase tracking-[0.5em] animate-pulse">
+           Initializing_Neural_Link...
+        </div>
+      </div>
+    );
+  }
+
+  // Show the onboarding modal if the user hasn't entered their prescription yet
+  if (!isCalibrated) {
+    return <PowerInputModal onSubmit={handlePrescriptionSubmit} />;
+  }
+
+  // Compute the aggregated power values for the shader
+  const aggregatedSphere = ((config.left_eye + config.left_ap) + (config.right_eye + config.right_ap)) / 2;
+  const aggregatedCyl = (config.left_cyl + config.right_cyl) / 2;
+  const aggregatedAxis = (config.left_axis + config.right_axis) / 2;
 
   return (
-    <div className="flex h-screen bg-cyber-black text-white overflow-hidden font-sans">
-      {/* Sidebar */}
-      <CalibrationSidebar 
-        config={config} 
-        setConfig={setConfig} 
-        isSplit={isSplit}
-        setIsSplit={setIsSplit}
-        onSave={handleSave}
-        loading={loading}
-      />
-
-      {/* Main Content */}
-      <main className="flex-1 relative flex flex-col">
-        {/* Header */}
-        <header className="h-16 glass border-b border-cyber-green/10 flex items-center justify-between px-8 z-10">
-          <div className="flex items-center gap-4">
-            <img 
-              src="/logo.png" 
-              alt="EYEP" 
-              className="w-8 h-8 object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'block';
-              }}
-            />
-            <Monitor className="hidden text-cyber-green w-5 h-5" />
-            <h1 className="text-sm font-black uppercase tracking-[0.2em]">
-              Primary Viewport <span className="text-cyber-green/50">Node_01</span>
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <div className="text-[10px] text-right">
-              <div className="text-cyber-green/50 uppercase tracking-widest">System Status</div>
-              <div className="text-white font-bold">CALIBRATED</div>
-            </div>
-          </div>
-        </header>
-
-        {/* Viewport */}
-        <div className="flex-1 relative">
-          <VisionEngine config={config} isSplit={isSplit} />
-          
-          {/* Overlay elements */}
-          <div className="absolute inset-0 pointer-events-none border-[20px] border-cyber-black/20" />
-          <div className="absolute top-8 left-8 p-4 glass border border-cyber-green/10 pointer-events-none">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-cyber-green animate-pulse rounded-full" />
-              <span className="text-[10px] uppercase font-bold text-cyber-green tracking-widest">System Live</span>
-            </div>
-            <div className="text-[20px] font-mono text-cyber-green/30 select-none">
-              {new Date().toLocaleTimeString([], { hour12: false })}
-            </div>
-          </div>
-
-          <div className="absolute bottom-8 right-8 flex gap-2">
-             <button className="p-3 glass border border-cyber-green/10 text-cyber-green hover:bg-cyber-green/10 transition-all">
-               <Maximize2 className="w-4 h-4" />
-             </button>
-             <button className="p-3 glass border border-cyber-green/10 text-cyber-green hover:bg-cyber-green/10 transition-all">
-               <Settings className="w-4 h-4" />
-             </button>
+    <div className="flex flex-col h-screen bg-[#0A0F1A] text-slate-300 font-mono selection:bg-cyan-500/30 overflow-hidden">
+      {/* Top Navigation Bar */}
+      <header className="h-14 border-b border-slate-800 bg-[#0D1424] flex items-center justify-between px-6 z-50 shrink-0">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+             <img src="/logo.png" alt="EYEP" className="w-7 h-7 object-contain brightness-125" onError={(e) => e.target.style.display = 'none'} />
+             <div className="h-4 w-px bg-slate-800 mx-2" />
+             <h1 className="text-sm font-black tracking-[0.3em] text-white uppercase italic">System Overview</h1>
           </div>
         </div>
 
-        {/* Footer Stats */}
-        <footer className="h-10 glass border-t border-cyber-green/10 flex items-center px-8 text-[10px] uppercase tracking-widest text-cyber-green/40">
-          <div className="flex gap-8">
-            <span>Latency: 2ms</span>
-            <span>GPU: Stable (60FPS)</span>
-            <span>Precision: High-Orbit</span>
-          </div>
-          <div className="ml-auto italic">
-            EYEP v1.0.0 // Assistive Graphics Engine
-          </div>
-        </footer>
-      </main>
+        <div className="flex items-center gap-6 text-[10px] font-bold">
+           {/* Live power readout in header */}
+           <div className="flex items-center gap-3 text-cyan-400/70 tracking-widest">
+              <span>SPH: {aggregatedSphere.toFixed(2)}</span>
+              <span className="text-slate-700">|</span>
+              <span>CYL: {aggregatedCyl.toFixed(2)}</span>
+              <span className="text-slate-700">|</span>
+              <span>AXIS: {aggregatedAxis.toFixed(0)}°</span>
+           </div>
+           <div className="flex items-center gap-2 text-slate-400 tracking-[0.2em]">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+              <span>EYEP_LINK_STABLE</span>
+           </div>
+           <div className="text-slate-500">
+              {time.toLocaleTimeString([], { hour12: false })} UTC
+           </div>
+        </div>
+      </header>
+
+      {/* Main Dashboard Grid */}
+      <div className="flex-1 grid grid-cols-12 gap-1 p-1 overflow-hidden">
+        
+        {/* Left Column: Prescription & Controls */}
+        <div className="col-span-3 flex flex-col gap-1 overflow-hidden">
+          <CalibrationSidebar 
+            config={config} 
+            setConfig={setConfig} 
+            isSplit={isSplit}
+            setIsSplit={setIsSplit}
+            isAutoDistance={isAutoDistance}
+            setIsAutoDistance={setIsAutoDistance}
+            onSave={handleSave}
+            loading={loading}
+          />
+        </div>
+
+        {/* Center Column: Primary Viewport */}
+        <div className="col-span-9 flex flex-col gap-1 overflow-hidden relative group border border-slate-800 bg-black">
+           {/* Viewport Header */}
+           <div className="bg-[#0D1424] border-b border-slate-800 p-3 flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-3">
+                 <Monitor className="w-4 h-4 text-cyan-400" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Visual Engine Output</span>
+              </div>
+              <div className="flex gap-1">
+                {demoImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImage(i + 1)}
+                    className={`w-6 h-6 border flex items-center justify-center text-[9px] transition-all font-bold ${
+                      activeImage === i + 1 ? 'border-cyan-400 text-cyan-400 bg-cyan-400/10' : 'border-slate-800 text-slate-600 hover:border-slate-700'
+                    }`}
+                  >
+                    0{i + 1}
+                  </button>
+                ))}
+              </div>
+           </div>
+
+           {/* Main Canvas Area */}
+           <div className="flex-1 relative overflow-hidden">
+              <VisionSensor 
+                active={isAutoDistance} 
+                onDistanceUpdate={(d) => setConfig(prev => ({ ...prev, distance_cm: d }))} 
+              />
+              <VisionEngine 
+                config={{
+                  ...config,
+                  sphere: aggregatedSphere,
+                  cyl: aggregatedCyl,
+                  axis: aggregatedAxis,
+                }} 
+                initialPower={initialPower}
+                isSplit={isSplit}
+                imageUrl={demoImages[activeImage - 1]}
+              />
+              
+              {/* Overlay HUD */}
+              <div className="absolute inset-0 pointer-events-none p-6 flex flex-col justify-between border-[12px] border-black/20">
+                 <div className="flex justify-between items-start">
+                    <div className="bg-[#0D1424]/60 backdrop-blur-sm p-3 border border-white/5 space-y-1">
+                       <div className="flex items-center gap-2 mb-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                          <span className="text-[9px] font-black uppercase text-cyan-400 tracking-widest">Target_Sync</span>
+                       </div>
+                       <div className="text-xl font-mono text-white/40 leading-none">
+                          {config.distance_cm}
+                          <span className="text-[10px] ml-1">cm</span>
+                       </div>
+                    </div>
+                 </div>
+                 
+                 <div className="flex justify-between items-end">
+                    <div className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em]">
+                       Node_01 // Render_Scale: 1.0x
+                    </div>
+                    <div className="flex gap-2 pointer-events-auto">
+                       <button
+                         onClick={() => setIsCalibrated(false)}
+                         className="p-2 bg-slate-900 border border-slate-800 hover:border-cyan-400 text-slate-500 hover:text-cyan-400 transition-all text-[8px] font-bold uppercase tracking-wider px-3"
+                       >
+                         Recalibrate
+                       </button>
+                       <button className="p-2 bg-slate-900 border border-slate-800 hover:border-cyan-400 text-slate-500 hover:text-cyan-400 transition-all">
+                          <Maximize2 size={12} />
+                       </button>
+                       <button className="p-2 bg-slate-900 border border-slate-800 hover:border-cyan-400 text-slate-500 hover:text-cyan-400 transition-all">
+                          <Settings size={12} />
+                       </button>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* Global Status Bar */}
+      <footer className="h-8 bg-[#0D1424] border-t border-slate-800 flex items-center px-6 text-[8px] uppercase tracking-[0.3em] font-black text-slate-600 shrink-0">
+        <div className="flex gap-12">
+           <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+              <span>EYEP_PROTO: ACTIVE</span>
+           </div>
+           <div>Transmission: 1.25 GBPS</div>
+           <div>Buffers: NOMINAL</div>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+           <Shield size={10} className="text-cyan-500" />
+           <span>Security Node: Enabled</span>
+        </div>
+      </footer>
     </div>
   );
 }
