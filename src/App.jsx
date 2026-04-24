@@ -111,7 +111,19 @@ function App() {
   const aggregatedAxis = (config.left_axis + config.right_axis) / 2;
 
   return (
-    <div className="flex flex-col h-screen bg-[#0A0F1A] text-slate-300 font-mono selection:bg-cyan-500/30 overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#0A0F1A] text-slate-300 font-mono selection:bg-cyan-500/30 overflow-hidden relative">
+      {/* Tactical Background Grid */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: 'linear-gradient(rgba(0,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.2) 1px, transparent 1px)',
+          backgroundSize: '100px 100px'
+        }} />
+        <div className="absolute inset-0 opacity-[0.01]" style={{
+          backgroundImage: 'linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px)',
+          backgroundSize: '20px 20px'
+        }} />
+      </div>
+
       {/* Top Navigation Bar */}
       <header className="h-14 border-b border-slate-800 bg-[#0D1424] flex items-center justify-between px-6 z-50 shrink-0">
         <div className="flex items-center gap-6">

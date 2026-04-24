@@ -22,12 +22,17 @@ export default function PowerInputModal({ onSubmit }) {
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#060A14] flex items-center justify-center font-mono overflow-hidden">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
+      {/* Tactical Background Grid */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 opacity-[0.15]" style={{
+          backgroundImage: 'linear-gradient(rgba(0,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.2) 1px, transparent 1px)',
+          backgroundSize: '80px 80px'
         }} />
+        <div className="absolute inset-0 opacity-[0.05]" style={{
+          backgroundImage: 'linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px)',
+          backgroundSize: '20px 20px'
+        }} />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#060A14_100%)]" />
       </div>
 
       {/* Floating particles */}
@@ -53,15 +58,23 @@ export default function PowerInputModal({ onSubmit }) {
             className="relative z-10 text-center max-w-lg px-8"
           >
             <motion.div
-              className="w-24 h-24 mx-auto mb-8 border-2 border-cyan-500/40 rounded-full flex items-center justify-center relative"
-              animate={{ boxShadow: ['0 0 20px rgba(0,255,255,0)', '0 0 40px rgba(0,255,255,0.2)', '0 0 20px rgba(0,255,255,0)'] }}
-              transition={{ duration: 3, repeat: Infinity }}
+              className="w-40 h-40 mx-auto mb-10 relative flex items-center justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
             >
-              <Eye className="w-10 h-10 text-cyan-400" />
               <motion.div
-                className="absolute inset-0 border-2 border-cyan-500/20 rounded-full"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 bg-cyan-500/5 rounded-full blur-3xl"
+                animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+                transition={{ duration: 4, repeat: Infinity }}
+              />
+              <img 
+                src="/logo.png" 
+                alt="EYEP Logo" 
+                className="w-full h-full object-contain relative z-10 brightness-110 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)] rounded-lg"
+                onError={(e) => {
+                  e.target.src = "https://cdn-icons-png.flaticon.com/512/25/25231.png";
+                }}
               />
             </motion.div>
 
@@ -201,7 +214,6 @@ export default function PowerInputModal({ onSubmit }) {
                   className="flex-1 py-3 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-400/50 text-white text-xs font-black uppercase tracking-widest hover:shadow-[0_0_30px_rgba(0,255,255,0.2)] transition-all flex items-center justify-center gap-2"
                   whileTap={{ scale: 0.97 }}
                 >
-                  <Zap className="w-4 h-4 text-cyan-400" />
                   Launch EYEP Engine
                 </motion.button>
               </div>

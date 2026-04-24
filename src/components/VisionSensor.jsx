@@ -175,7 +175,6 @@ export default function VisionSensor({ onDistanceUpdate, active }) {
           </div>
           
           <div className="flex items-center gap-1.5">
-             <Zap size={10} className={distance ? 'text-amber-400' : 'text-slate-700'} />
              <span className="text-[7px] text-slate-500 font-black uppercase tracking-[0.2em]">
                {status === 'live' ? 'High_Precision' : 'Calibrating...'}
              </span>
