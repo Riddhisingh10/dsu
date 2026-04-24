@@ -22,29 +22,20 @@ export default function PowerInputModal({ onSubmit }) {
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#060A14] flex items-center justify-center font-mono overflow-hidden">
-      {/* Tactical Highlighted Grid */}
+      {/* Elegant Tactical Grid */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Main Glowing Grid */}
-        <div className="absolute inset-0 opacity-[0.2]" style={{
-          backgroundImage: 'linear-gradient(rgba(34,211,238,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.4) 1px, transparent 1px)',
+        {/* Subtle Deep Grid */}
+        <div className="absolute inset-0 opacity-[0.08]" style={{
+          backgroundImage: 'linear-gradient(rgba(34,211,238,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.15) 1px, transparent 1px)',
           backgroundSize: '100px 100px'
         }} />
-        {/* Micro Grid */}
-        <div className="absolute inset-0 opacity-[0.05]" style={{
+        {/* Small Box Micro Grid */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{
           backgroundImage: 'linear-gradient(rgba(34,211,238,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.2) 1px, transparent 1px)',
           backgroundSize: '20px 20px'
         }} />
-        {/* Global Glow */}
+        {/* Soft Vignette to keep focus center */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#060A14_100%)]" />
-        <motion.div 
-          className="absolute inset-0 opacity-[0.1]"
-          animate={{ opacity: [0.05, 0.15, 0.05] }}
-          transition={{ duration: 4, repeat: Infinity }}
-          style={{
-            backgroundImage: 'linear-gradient(rgba(34,211,238,0.5) 2px, transparent 2px), linear-gradient(90deg, rgba(34,211,238,0.5) 2px, transparent 2px)',
-            backgroundSize: '100px 100px'
-          }}
-        />
       </div>
 
       {/* Floating particles */}
