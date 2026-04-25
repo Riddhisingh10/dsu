@@ -17,7 +17,7 @@ function App() {
   const [isAutoDistance, setIsAutoDistance] = useState(false);
   const [time, setTime] = useState(new Date());
   const [isCalibrated, setIsCalibrated] = useState(false);
-  const [initialPower, setInitialPower] = useState({ sphere: 0, cyl: 0, axis: 0 });
+  const [initialPower, setInitialPower] = useState({ sphere: 2.0, cyl: 0, axis: 0 });
 
   // Hook MUST be called before any useEffect that references its return values
   const { config, setConfig, loading, saveProfile } = useVisionProfile(session?.user);
@@ -38,17 +38,26 @@ function App() {
 
   // When the user submits their prescription from the onboarding modal
   const handlePrescriptionSubmit = useCallback((prescription) => {
+    // Calculate the mathematical mean (average) for binocular synchronization
+    const meanSphere = ((prescription.left_eye + prescription.left_ap) + (prescription.right_eye + prescription.right_ap)) / 2;
+    const meanCyl = (prescription.left_cyl + prescription.right_cyl) / 2;
+    const meanAxis = (prescription.left_axis + prescription.right_axis) / 2;
+
     const power = {
-      sphere: ((prescription.left_eye + prescription.left_ap) + (prescription.right_eye + prescription.right_ap)) / 2,
-      cyl: (prescription.left_cyl + prescription.right_cyl) / 2,
-      axis: (prescription.left_axis + prescription.right_axis) / 2
+      sphere: meanSphere,
+      cyl: meanCyl,
+      axis: meanAxis
     };
     
     setInitialPower(power);
+    
+    // Set the live configuration to use these mean values as the baseline
     setConfig(prev => ({
       ...prev,
       ...prescription,
+      // We can also ensure the initial live state starts at the target mean if desired
     }));
+    
     setIsCalibrated(true);
   }, [setConfig]);
 

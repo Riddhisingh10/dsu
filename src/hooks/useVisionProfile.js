@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabase';
 
 export function useVisionProfile(user) {
   const [config, setConfig] = useState({
-    sphere: 0.0,
-    left_eye: 0.0,
-    right_eye: 0.0,
+    sphere: 2.0,
+    left_eye: 2.0,
+    right_eye: 2.0,
     left_cyl: 0.0,
     right_cyl: 0.0,
     left_axis: 0,

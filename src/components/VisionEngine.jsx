@@ -45,14 +45,15 @@ const fragmentShader = `
     float basePower = abs(u_sphere) + abs(u_cyl) * 0.5;
     
     // Distance-induced blur (Accommodation Stress)
-    // Ideal focus is set to 60cm. As user gets closer (<40cm), blur increases dramatically.
-    float distanceStress = max(0.0, (60.0 - u_distance) * 0.15);
+    // Toned down to avoid 'Too Blur' state
+    float distanceStress = max(0.0, (60.0 - u_distance) * 0.04);
     float totalPower = basePower + distanceStress;
     
     if (totalPower < 0.01) return texture2D(u_texture, zuv);
     
-    float blurRadius = totalPower * 6.0; 
-    float cylExtra = abs(u_cyl) * 3.0;
+    // Balanced blur scaling: ensures text is still 'readable' but out of focus
+    float blurRadius = pow(totalPower, 0.7) * 2.2; 
+    float cylExtra = abs(u_cyl) * 1.5;
     mat2 rot = rotMat(u_axis * 0.0174533);
     
     vec4 color = vec4(0.0);
@@ -67,7 +68,7 @@ const fragmentShader = `
         vec2 offset = vec2(fx * blurRadius, fy * (blurRadius + cylExtra));
         offset = rot * offset / (u_resolution + 0.0001);
         
-        float sigma = totalPower * 1.5 + 0.5;
+        float sigma = totalPower * 0.8 + 0.4;
         float weight = exp(-(dist * dist) / (2.0 * sigma * sigma));
         color += texture2D(u_texture, zuv + offset) * weight;
         total += weight;
